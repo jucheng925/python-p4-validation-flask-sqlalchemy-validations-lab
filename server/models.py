@@ -12,6 +12,20 @@ class Author(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
     # Add validators 
+    @validates('name')
+    def validate_name(self, key, name):
+        if name == "":
+            raise ValueError("Author name is required")
+        else:
+            if Author.query.filter_by(name=name).first():
+                raise ValueError("No two authors should have the same name.")
+        return name
+    
+    @validates('phone_number')
+    def validate_phone_number(self, key, phone_number):
+        if (len(phone_number) != 10) or (not phone_number.isdigit()):
+            raise ValueError("Phone number need to be exactly ten digits")
+        return phone_number
 
     def __repr__(self):
         return f'Author(id={self.id}, name={self.name})'
@@ -27,7 +41,33 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # Add validators  
+    # Add validators 
+    @validates('content') 
+    def validate_content(self, key, content):
+        if len(content) < 250:
+            raise ValueError("Post content need to be at least 250 characters long.")
+        return content
+
+    @validates('summary')
+    def validate_summary(self, key, summary):
+        if len(summary) > 250:
+            raise ValueError("Post summary has a maximum of 250 characters")
+        return summary
+    
+    @validates('category')
+    def validate_category(self, key, category):
+        if category not in ["Fiction", "Non-Fiction"]:
+            raise ValueError("Category should be either Fiction or Non-Fiction")
+        return category
+    
+    @validates('title')
+    def validate_title(self, key, title):
+        clickbait_keywords = ["Won't Believe", "Secret", "Top", "Guess"]
+        for keyword in clickbait_keywords:
+            if keyword in title:
+                return title
+        raise ValueError("Title must contains the clickbait keywords.")
+
 
 
     def __repr__(self):
